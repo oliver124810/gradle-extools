@@ -217,6 +217,60 @@ class ExtoolsPluginExtoolsExecTest extends Specification {
         result.task(":$taskName").outcome == FAILED
     }
 
+    def "Environment is inherited when not explicitly set"() {
+        given:
+        def taskName = 'execImplicitEnvironment'
+        def extractDir = temporaryFolder.newFolder()
+        def expectedEnv = getSysEnv()
+        expectedEnv["PATH"] = new File(extractDir, "printenvvars/bin").canonicalPath + File.pathSeparator +
+                new File(extractDir, "dummy_2/bin").canonicalPath + File.pathSeparator +
+                getSystemPath()
+        expectedEnv["PRINTENVVARS_BIN"] = new File(extractDir, "printenvvars/bin").canonicalPath
+        expectedEnv["CMAKE_PREFIX_PATH"] = new File(extractDir, "dummy_2/cmake2").canonicalPath
+        expectedEnv["DUMMY_STRING"] = "Value of DUMMY_STRING from dummy_2"
+        expectedEnv["DUMMY2_STRING"] = "Value of DUMMY2_STRING"
+        when:
+        def result = new GradleRunnerHelper(
+                temporaryRoot: temporaryFolder.newFolder(),
+                buildScript: generateBuildScript(),
+                repositoryUrl: REPO_URL,
+                extractDir: extractDir.canonicalPath,
+                taskName: taskName,
+        ).build()
+        def actualEnv = parseEnvVariablesFromStdout(dumpFile.text)
+
+        then:
+        result.task(":$taskName").outcome == SUCCESS
+        compareEnv(expectedEnv, actualEnv) == ""
+    }
+
+    def "Environment is not inherited when explicitly set"() {
+        given:
+        def taskName = 'execExplicitEnvironment'
+        def extractDir = temporaryFolder.newFolder()
+        def expectedEnv = getSysEnv()
+        expectedEnv["PATH"] = new File(extractDir, "printenvvars/bin").canonicalPath + File.pathSeparator +
+                new File(extractDir, "dummy_2/bin").canonicalPath + File.pathSeparator +
+                "specific"
+        expectedEnv["PRINTENVVARS_BIN"] = new File(extractDir, "printenvvars/bin").canonicalPath
+        expectedEnv["CMAKE_PREFIX_PATH"] = new File(extractDir, "dummy_2/cmake2").canonicalPath
+        expectedEnv["DUMMY_STRING"] = "Value of DUMMY_STRING from dummy_2"
+        expectedEnv["DUMMY2_STRING"] = "Value of DUMMY2_STRING"
+        when:
+        def result = new GradleRunnerHelper(
+                temporaryRoot: temporaryFolder.newFolder(),
+                buildScript: generateBuildScript(),
+                repositoryUrl: REPO_URL,
+                extractDir: extractDir.canonicalPath,
+                taskName: taskName,
+        ).build()
+        def actualEnv = parseEnvVariablesFromStdout(dumpFile.text)
+
+        then:
+        result.task(":$taskName").outcome == SUCCESS
+        compareEnv(expectedEnv, actualEnv) == ""
+    }
+
     def "PATH variable is extended as required"() {
         given:
         def taskName = 'execPrintEnvVarsWithImplicitPath'
