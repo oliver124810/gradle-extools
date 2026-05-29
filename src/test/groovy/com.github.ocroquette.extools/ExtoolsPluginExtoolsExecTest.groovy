@@ -217,6 +217,52 @@ class ExtoolsPluginExtoolsExecTest extends Specification {
         result.task(":$taskName").outcome == FAILED
     }
 
+    def "Environment is inherited when not explicitly set"() {
+        given:
+        def taskName = 'execImplicitEnvironment'
+        def extractDir = temporaryFolder.newFolder()
+        def expectedEnv = getSysEnv()
+        expectedEnv["PATH"] = new File(extractDir, "printenvvars/bin").canonicalPath + File.pathSeparator +
+                getSystemPath()
+        expectedEnv["PRINTENVVARS_BIN"] = new File(extractDir, "printenvvars/bin").canonicalPath
+        when:
+        def result = new GradleRunnerHelper(
+                temporaryRoot: temporaryFolder.newFolder(),
+                buildScript: generateBuildScript(),
+                repositoryUrl: REPO_URL,
+                extractDir: extractDir.canonicalPath,
+                taskName: taskName,
+        ).build()
+        def actualEnv = parseEnvVariablesFromStdout(dumpFile.text)
+
+        then:
+        result.task(":$taskName").outcome == SUCCESS
+        compareEnv(expectedEnv, actualEnv) == ""
+    }
+
+    def "Environment is not inherited when explicitly set"() {
+        given:
+        def taskName = 'execExplicitEnvironment'
+        def extractDir = temporaryFolder.newFolder()
+        def expectedEnv = getSysEnv()
+        expectedEnv["PATH"] = new File(extractDir, "printenvvars/bin").canonicalPath + File.pathSeparator +
+                "explicit_path"
+        expectedEnv["PRINTENVVARS_BIN"] = new File(extractDir, "printenvvars/bin").canonicalPath
+        when:
+        def result = new GradleRunnerHelper(
+                temporaryRoot: temporaryFolder.newFolder(),
+                buildScript: generateBuildScript(),
+                repositoryUrl: REPO_URL,
+                extractDir: extractDir.canonicalPath,
+                taskName: taskName,
+        ).build()
+        def actualEnv = parseEnvVariablesFromStdout(dumpFile.text)
+
+        then:
+        result.task(":$taskName").outcome == SUCCESS
+        compareEnv(expectedEnv, actualEnv) == ""
+    }
+
     def "PATH variable is extended as required"() {
         given:
         def taskName = 'execPrintEnvVarsWithImplicitPath'

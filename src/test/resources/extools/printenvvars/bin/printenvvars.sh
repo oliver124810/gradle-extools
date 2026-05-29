@@ -2,4 +2,4 @@
 
 DUMPFILE="${1?Please provide as parameter the file to dump to}"
 
-env > "$DUMPFILE"
+/usr/bin/env > "$DUMPFILE"

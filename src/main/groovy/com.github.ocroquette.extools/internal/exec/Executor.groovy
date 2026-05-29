@@ -133,9 +133,9 @@ class Executor {
             }
             String systemCase = getSystemCase(variableName)
 
-            def systemValue = System.getenv(systemCase)
-            if (systemValue != null) {
-                systemValue.split(File.pathSeparator).each { it ->
+            def baseValue = conf.environment.get(variableName) ?: System.getenv(systemCase)
+            if (baseValue != null) {
+                baseValue.split(File.pathSeparator).each { it ->
                     paths.add(it)
                 }
             }

@@ -111,6 +111,17 @@ task execPrintEnvVarsWithEnvironmentVariableSingle(type:ExtoolExec) {
     commandLine "printenvvars.$scriptExtension", "%dumpFile%"
 }
 
+task execExplicitEnvironment(type:ExtoolExec) {
+    usingExtools "printenvvars"
+    environment "PATH": "explicit_path"
+    commandLine "printenvvars.$scriptExtension", "%dumpFile%"
+}
+
+task execImplicitEnvironment(type:ExtoolExec) {
+    usingExtools "printenvvars"
+    commandLine "printenvvars.$scriptExtension", "%dumpFile%"
+}
+
 task execUseAll(type:ExtoolExec) {
     // Unorder the list, we check if the variables are set in the right order in the test
     usingAdditionalExtools "dummy_1", "printenvvars", "printargs", "subdir/dummy_3"
